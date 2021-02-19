@@ -26,6 +26,8 @@
 #==============================================================================
 
 require 'time'
+require 'slop'
+require 'fileutils'
 
 module FlightAuth
   CLI = Struct.new(:shared_secret_path, :issuer) do

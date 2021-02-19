@@ -24,6 +24,9 @@
 # For more information on FlightAuth, please visit:
 # https://github.com/openflighthpc/flight_auth
 #==============================================================================
+
+require 'jwt'
+
 require "flight_auth/version"
 require "flight_auth/cli"
 
