@@ -32,7 +32,7 @@ require 'fileutils'
 module FlightAuth
   CLI = Struct.new(:shared_secret_path, :issuer) do
     def slop
-      @slop ||= Slop.parse(ARGV) do |o|
+      @slop ||= Slop::Options.new do |o|
         o.bool '--secret', 'generate and save a new shared secret'
         o.string '--user', 'sets the username field in the token', default: ENV['USER']
         o.integer '--expiry', 'how long the tokens are valid for in days', default: 1
@@ -44,31 +44,32 @@ module FlightAuth
     end
 
     def run(*args)
-      slop.parse(*args)
+      # Parse the options
+      opts = slop.parse(args)
+
+      # Determine the shared secret
+      if opts.secret?
+        File.write(shared_secret_path, SecureRandom.alphanumeric(100))
+        FileUtils.chmod(0400, shared_secret_path)
+      elsif ! File.exists? shared_secret_path
+        raise MissingError, <<~ERROR.chomp
+          The shared_secret_path does not exists: #{shared_secret_path}
+          Please use --secret to generate one!
+        ERROR
+      end
+      shared_secret = File.read shared_secret_path
+
+      # Generate the token
       now = Time.now
       payload = {
-        username: slop[:user],
+        username: opts[:user],
         iss: issuer,
         iat: now.to_i,
         nbf: now.to_i,
-        exp: now.to_i + slop[:expiry] * 86400
+        exp: now.to_i + opts[:expiry] * 86400
       }
       puts JWT.encode(payload, shared_secret, 'HS256')
     end
 
-    def shared_secret
-      @shared_secret ||= begin
-        if slop.secret?
-          File.write(shared_secret_path, SecureRandom.alphanumeric(100))
-          FileUtils.chmod(0400, shared_secret_path)
-        elsif ! File.existS? shared_secret_path
-          raise MissingError, <<~ERROR.chomp
-            The shared_secret_path does not exists: #{shared_secret_path}
-            Please use --secret to generate one!
-          ERROR
-        end
-        File.read shared_secret_path
-      end
-    end
   end
 end
