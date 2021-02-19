@@ -25,6 +25,7 @@
 # https://github.com/openflighthpc/flight_auth
 #==============================================================================
 require "flight_auth/version"
+require "flight_auth/cli"
 
 module FlightAuth
   class Error < StandardError; end
