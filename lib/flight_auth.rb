@@ -32,6 +32,11 @@ module FlightAuth
   class MissingError < Error; end
 
   Builder = Struct.new(:shared_secret_path) do
+    def initialize(*_)
+      super
+      shared_secret
+    end
+
     def shared_secret
       @shared_secret ||= if File.exists?(shared_secret_path)
         File.read(shared_secret_path)
